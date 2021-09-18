@@ -5,23 +5,20 @@ using System.Threading.Tasks;
 
 namespace ToDo.Bot.Dialogs.Operations
 {
-    public class CreateTaskDialog : ComponentDialog
+    public class CreateMoreTaskDialog : ComponentDialog
     {
-        public CreateTaskDialog() : base(nameof(CreateTaskDialog))
+        public CreateMoreTaskDialog() : base(nameof(CreateMoreTaskDialog))
         {
-
             var waterfallSteps = new WaterfallStep[]
-          {
+            {
                 TasksStepAsync,
-                ActStepAsync,
-                MoreTasksStepAsync,
-                SummaryStepAsync
-          };
+                ConfirmStepAsync,
+                SummaryStepAsync,
+            };
 
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), waterfallSteps));
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
-            AddDialog(new CreateMoreTaskDialog());
 
             InitialDialogId = nameof(WaterfallDialog);
         }
@@ -34,7 +31,7 @@ namespace ToDo.Bot.Dialogs.Operations
             }, cancellationToken);
         }
 
-        private async Task<DialogTurnResult> ActStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> ConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userDetails = (User)stepContext.Options;
             stepContext.Values["Task"] = (string)stepContext.Result;
@@ -46,29 +43,18 @@ namespace ToDo.Bot.Dialogs.Operations
             }, cancellationToken);
         }
 
-        private async Task<DialogTurnResult> MoreTasksStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> SummaryStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userDetails = (User)stepContext.Options;
             if ((bool)stepContext.Result)
             {
-                return await stepContext.BeginDialogAsync(nameof(CreateMoreTaskDialog), userDetails, cancellationToken);
+                return await stepContext.ReplaceDialogAsync(InitialDialogId, userDetails, cancellationToken);
             }
             else
             {
-                return await stepContext.NextAsync(userDetails, cancellationToken);
+                await stepContext.Context.SendActivityAsync(MessageFactory.Text("Ok."));
+                return await stepContext.EndDialogAsync(userDetails, cancellationToken);
             }
-        }
-
-        private async Task<DialogTurnResult> SummaryStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userDetails = (User)stepContext.Result;
-
-            await stepContext.Context.SendActivityAsync(MessageFactory.Text("Here are the tasks you provided: "), cancellationToken);
-            for (int i = 0; i < userDetails.TasksList.Count; i++)
-            {
-                await stepContext.Context.SendActivityAsync(MessageFactory.Text(userDetails.TasksList[i]), cancellationToken);
-            }
-            return await stepContext.EndDialogAsync(userDetails, cancellationToken);
         }
     }
 }

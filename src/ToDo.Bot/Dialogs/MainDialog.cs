@@ -14,6 +14,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ToDo.Bot.Dialogs.Operations;
+
 namespace ToDo.Bot.Dialogs
 {
     public class MainDialog : ComponentDialog
@@ -30,6 +32,9 @@ namespace ToDo.Bot.Dialogs
 
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new ChoicePrompt(nameof(ChoicePrompt)));
+            AddDialog(new CreateTaskDialog());
+            AddDialog(new ViewTaskDialog());
+            AddDialog(new DeleteTaskDialog());
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
             {
                 IntroStepAsync,
@@ -78,7 +83,23 @@ namespace ToDo.Bot.Dialogs
             string operation = (string)stepContext.Values["Operation"];
             await stepContext.Context.SendActivityAsync(MessageFactory.Text("You have selected - " + operation), cancellationToken);
 
-            return await stepContext.NextAsync(null, cancellationToken);
+            if ("Create Task".Equals(operation))
+            {
+                return await stepContext.BeginDialogAsync(nameof(CreateTaskDialog), new User(), cancellationToken);
+            }
+            else if ("View Task".Equals(operation))
+            {
+                return await stepContext.BeginDialogAsync(nameof(ViewTaskDialog), new User(), cancellationToken);
+            }
+            else if ("Delete Task".Equals(operation))
+            {
+                return await stepContext.BeginDialogAsync(nameof(DeleteTaskDialog), new User(), cancellationToken);
+            }
+            else
+            {
+                await stepContext.Context.SendActivityAsync(MessageFactory.Text("The selected option was not found"), cancellationToken);
+                return await stepContext.NextAsync(null, cancellationToken);
+            }
         }
         private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {

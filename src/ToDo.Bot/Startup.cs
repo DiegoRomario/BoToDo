@@ -6,12 +6,15 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.BotFramework;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
+using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using ToDo.Bot.Bots;
 using ToDo.Bot.Dialogs;
+using ToDo.Bot.Utilities;
 
 namespace ToDo.Bot
 {
@@ -25,6 +28,8 @@ namespace ToDo.Bot
             // Create the Bot Framework Adapter with error handling enabled.
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
 
+            services.AddSingleton<ICredentialProvider, ConfigurationCredentialProvider>();
+
             // Create the storage we'll be using for User and Conversation state. (Memory is great for testing purposes.)
             services.AddSingleton<IStorage, MemoryStorage>();
 
@@ -36,6 +41,9 @@ namespace ToDo.Bot
 
             // Register LUIS recognizer
             services.AddSingleton<ToDoLUISRecognizer>();
+
+            // Register Cosmos DB Client
+            services.AddSingleton<CosmosDBClient>();
 
             // The MainDialog that will be run by the bot.
             services.AddSingleton<MainDialog>();
@@ -66,3 +74,4 @@ namespace ToDo.Bot
         }
     }
 }
+

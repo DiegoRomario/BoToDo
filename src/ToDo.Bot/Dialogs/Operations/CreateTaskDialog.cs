@@ -2,21 +2,25 @@
 using Microsoft.Bot.Builder.Dialogs;
 using System.Threading;
 using System.Threading.Tasks;
+using ToDo.Bot.Utilities;
 
 namespace ToDo.Bot.Dialogs.Operations
 {
     public class CreateTaskDialog : ComponentDialog
     {
-        public CreateTaskDialog() : base(nameof(CreateTaskDialog))
+
+        private readonly CosmosDBClient _cosmosDBClient;
+        public CreateTaskDialog(CosmosDBClient cosmosDBClient) : base(nameof(CreateTaskDialog))
         {
 
+            _cosmosDBClient = cosmosDBClient;
             var waterfallSteps = new WaterfallStep[]
-          {
+            {
                 TasksStepAsync,
                 ActStepAsync,
                 MoreTasksStepAsync,
                 SummaryStepAsync
-          };
+            };
 
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), waterfallSteps));
             AddDialog(new TextPrompt(nameof(TextPrompt)));
@@ -63,11 +67,23 @@ namespace ToDo.Bot.Dialogs.Operations
         {
             var userDetails = (User)stepContext.Result;
 
-            await stepContext.Context.SendActivityAsync(MessageFactory.Text("Here are the tasks you provided: "), cancellationToken);
+            await stepContext.Context.SendActivityAsync(MessageFactory.Text("Here are the tasks you provided - "), cancellationToken);
             for (int i = 0; i < userDetails.TasksList.Count; i++)
             {
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text(userDetails.TasksList[i]), cancellationToken);
             }
+            await stepContext.Context.SendActivityAsync(MessageFactory.Text("Please wait while I add your tasks to the database..."), cancellationToken);
+            for (int i = 0; i < userDetails.TasksList.Count; i++)
+            {
+                if (await _cosmosDBClient.AddItemsToContainerAsync(User.UserID, userDetails.TasksList[i]) == -1)
+                {
+                    await stepContext.Context.SendActivityAsync(MessageFactory.Text("The Task '" + userDetails.TasksList[i] + "' already exists"), cancellationToken);
+
+                }
+
+            }
+            await stepContext.Context.SendActivityAsync(MessageFactory.Text("Add Task operation completed. Thank you."), cancellationToken);
+
             return await stepContext.EndDialogAsync(userDetails, cancellationToken);
         }
     }

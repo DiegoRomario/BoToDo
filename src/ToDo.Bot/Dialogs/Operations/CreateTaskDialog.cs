@@ -67,7 +67,7 @@ namespace ToDo.Bot.Dialogs.Operations
         {
             var userDetails = (User)stepContext.Result;
 
-            await stepContext.Context.SendActivityAsync(MessageFactory.Text("Here are the tasks you provided - "), cancellationToken);
+            await stepContext.Context.SendActivityAsync(MessageFactory.Text("Here are the tasks you provided:"), cancellationToken);
             for (int i = 0; i < userDetails.TasksList.Count; i++)
             {
                 await stepContext.Context.SendActivityAsync(MessageFactory.Text(userDetails.TasksList[i]), cancellationToken);

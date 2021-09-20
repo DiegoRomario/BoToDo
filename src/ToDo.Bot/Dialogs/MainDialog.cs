@@ -62,7 +62,7 @@ namespace ToDo.Bot.Dialogs
         {
             if (User.UserID == null)
             {
-                List<string> operationList = new List<string> { "Returning User", "New User" };
+                List<string> operationList = new List<string> { "Login", "Sign in" };
                 // Create card
                 var card = new AdaptiveCard(new AdaptiveSchemaVersion(1, 0))
                 {
@@ -103,7 +103,7 @@ namespace ToDo.Bot.Dialogs
                 string userType = (string)stepContext.Values["UserType"];
                 string userId = null;
 
-                if ("Returning User".Equals(userType))
+                if ("Login".Equals(userType))
                 {
                     return await stepContext.PromptAsync(UserValidationDialogID, new PromptOptions
                     {
